@@ -19,11 +19,8 @@ const LoginCard = () => {
         },
       );
 
-      // save JWT token
-      localStorage.setItem("token", response.data.token);
-
-      // save user data if needed
-      localStorage.setItem("user", JSON.stringify(response.data.user));
+      sessionStorage.setItem("token", response.data.token);
+      sessionStorage.setItem("user", JSON.stringify(response.data.user));
 
       message.success("Login successful");
 

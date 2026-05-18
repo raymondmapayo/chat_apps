@@ -1,54 +1,63 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 import { Avatar, Badge, Input } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
+import axios from "axios";
+import { socket } from "../socket/socket";
 
 interface ChatCardProps {
   isOpen: boolean;
+  userId: number;
+  onSelectChat: (chat: any) => void;
 }
 
-const ChatCard: React.FC<ChatCardProps> = ({ isOpen }) => {
+const ChatCard: React.FC<ChatCardProps> = ({
+  isOpen,
+  userId,
+  onSelectChat,
+}) => {
+  const [chats, setChats] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
+
   const limitMessage = (msg: string, limit: number) => {
-    return msg.length > limit ? msg.slice(0, limit) + "....." : msg;
+    return msg?.length > limit ? msg.slice(0, limit) + "....." : msg;
   };
-  const chats = [
-    {
-      id: 1,
-      name: "John Doe",
-      message: "Hey! How are you?",
-      time: "2m",
-      unread: 2,
-      active: true,
-      avatar: "https://i.pravatar.cc/150?img=1",
-    },
-    {
-      id: 2,
-      name: "Maria Clara",
-      message: "Can we meet tomorrow?",
-      time: "10m",
-      unread: 0,
-      active: false,
-      avatar: "https://i.pravatar.cc/150?img=5",
-    },
-    {
-      id: 3,
-      name: "Alex Smith",
-      message: "The files are ready.",
-      time: "1h",
-      unread: 4,
-      active: false,
-      avatar: "https://i.pravatar.cc/150?img=8",
-    },
-    {
-      id: 4,
-      name: "Team Support",
-      message: "Please check the updates safdaf  adsssfdfdfd asffdfdfdsd.",
-      time: "3h",
-      unread: 1,
-      active: true,
-      avatar: "https://i.pravatar.cc/150?img=12",
-    },
-  ];
+
+  const fetchChats = async () => {
+    try {
+      const res = await axios.get(
+        `http://localhost:8081/api/chat/list/${userId}`,
+      );
+
+      setChats(res.data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  useEffect(() => {
+    if (!userId) {
+      console.log("❌ NO USER ID PASSED TO CHAT CARD");
+      return;
+    }
+
+    console.log("✅ CHAT CARD USER ID:", userId);
+
+    fetchChats();
+    socket.emit("join", userId);
+
+    socket.on("refresh_chat_list", fetchChats);
+    socket.on("user_status_changed", fetchChats);
+
+    return () => {
+      socket.off("refresh_chat_list");
+      socket.off("user_status_changed");
+    };
+  }, [userId]);
+
+  const filteredChats = chats.filter((chat) =>
+    chat.fullname?.toLowerCase().includes(search.toLowerCase()),
+  );
 
   return (
     <div
@@ -60,7 +69,7 @@ const ChatCard: React.FC<ChatCardProps> = ({ isOpen }) => {
         transition-all duration-300 ease-in-out
         h-full
         w-full
-      ${isOpen ? "max-w-[295px] lg:w-[340px]" : "max-w-[295px]lg:w-[340px]"}
+        ${isOpen ? "max-w-[295px] lg:w-[340px]" : "max-w-[295px] lg:w-[340px]"}
       `}
     >
       {/* HEADER */}
@@ -81,51 +90,53 @@ const ChatCard: React.FC<ChatCardProps> = ({ isOpen }) => {
           size="large"
           placeholder="Search conversations..."
           prefix={<SearchOutlined />}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
           className="rounded-xl"
         />
       </div>
 
       {/* CHAT LIST */}
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
-        {chats.map((chat) => (
+        {filteredChats.map((chat) => (
           <div
             key={chat.id}
-            className="
-              flex items-center gap-3 p-3 rounded-xl cursor-pointer
-              hover:bg-gray-100 dark:hover:bg-[#1f1f1f]
-              transition-all
-            "
+            onClick={() => onSelectChat(chat)}
+            className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-gray-100 dark:hover:bg-[#1f1f1f]"
           >
+            {/* AVATAR */}
             <div className="relative">
-              <Avatar size={60} src={chat.avatar} />
+              <Avatar
+                size={60}
+                src={chat.avatar || "https://i.pravatar.cc/150"}
+              />
 
-              {chat.active && (
-                <span
-                  className="
-        absolute -bottom-0.5 right-1
-        w-3.5 h-3.5
-        bg-green-500
-        rounded-full
-        border-2 border-white dark:border-[#141414]
-        shadow-sm
-      "
-                />
+              {/* ONLINE STATUS */}
+              {chat.online_status === "Online" && (
+                <span className="absolute -bottom-0.5 right-1 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white dark:border-[#141414]" />
               )}
             </div>
 
+            {/* INFO */}
             <div className="flex-1 min-w-0">
               <div className="flex justify-between">
                 <h3 className="font-semibold truncate text-gray-800 dark:text-white">
-                  {chat.name}
+                  {chat.fullname}
                 </h3>
-                <span className="text-xs text-gray-400 ml-2">{chat.time}</span>
+
+                <span className="text-xs text-gray-400 ml-2">
+                  {chat.created_at
+                    ? new Date(chat.created_at).toLocaleTimeString()
+                    : ""}
+                </span>
               </div>
 
               <p className="text-sm text-gray-500 whitespace-nowrap overflow-hidden">
-                {limitMessage(chat.message, isOpen ? 21 : 33)}
+                {limitMessage(chat.message || "", isOpen ? 21 : 33)}
               </p>
             </div>
 
+            {/* UNREAD */}
             {chat.unread > 0 && <Badge count={chat.unread} />}
           </div>
         ))}
