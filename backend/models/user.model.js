@@ -1,11 +1,11 @@
 const { db } = require("../config/db");
 
 exports.UserModel = {
-  create: (fullname, email, password, cb) => {
+  create: (fullname, email, password, profile_pic, cb) => {
     const sql =
-      "INSERT INTO users (fullname, email, password, online_status) VALUES (?, ?, ?, 'Offline')";
+      "INSERT INTO users (fullname, email, password, profile_pic, online_status) VALUES (?, ?, ?, ?, 'Offline')";
 
-    db.query(sql, [fullname, email, password], cb);
+    db.query(sql, [fullname, email, password, profile_pic], cb);
   },
   // 🔥 ADD THIS (IMPORTANT)
   setOnlineStatus: (id, status, cb) => {

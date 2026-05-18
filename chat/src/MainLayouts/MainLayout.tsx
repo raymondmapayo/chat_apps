@@ -8,7 +8,7 @@ import Content from "../components/Content";
 import UserFiles from "../components/UserFiles";
 
 const ClientLayout = () => {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   // ✅ ADD THIS (SELECTED CHAT STATE)
@@ -79,7 +79,7 @@ const ClientLayout = () => {
 
         {/* RIGHT PANEL */}
         <div className="hidden xl:flex h-full">
-          <UserFiles isOpen={isOpen} />
+          <UserFiles isOpen={isOpen} chat={selectedChat} />
         </div>
       </div>
     </div>

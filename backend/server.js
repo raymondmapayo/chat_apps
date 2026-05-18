@@ -22,6 +22,12 @@ const io = new socketIo.Server(server, {
 
 app.use(cors());
 app.use(express.json());
+const path = require("path"); // ✅ ADD THIS
+
+app.use(
+  "/uploads/images",
+  express.static(path.join(__dirname, "uploads/images")),
+);
 
 // ROUTES
 app.use("/api/auth", authRoutes);

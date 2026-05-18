@@ -4,21 +4,34 @@ const { UserModel } = require("../models/user.model");
 
 // REGISTER
 exports.register = (req, res) => {
-  const { fullname, email, password } = req.body;
+  try {
+    const { fullname, email, password } = req.body;
 
-  if (!fullname || !email || !password) {
-    return res.status(400).json({ message: "Missing fields" });
-  }
+    if (!fullname || !email || !password) {
+      return res.status(400).json({ message: "Missing fields" });
+    }
 
-  bcrypt.hash(password, 10, (err, hash) => {
-    if (err) return res.status(500).json(err);
+    const profile_pic = req.file ? req.file.filename : null;
 
-    UserModel.create(fullname, email, hash, (err) => {
+    bcrypt.hash(password, 10, (err, hash) => {
       if (err) return res.status(500).json(err);
 
-      res.json({ message: "User registered successfully" });
+      UserModel.create(fullname, email, hash, profile_pic, (err) => {
+        if (err) {
+          console.log("DB ERROR:", err);
+          return res.status(500).json(err);
+        }
+
+        res.json({
+          message: "User registered successfully",
+          profile_pic,
+        });
+      });
     });
-  });
+  } catch (error) {
+    console.log("REGISTER CRASH:", error);
+    return res.status(500).json({ message: error.message });
+  }
 };
 
 // LOGIN (FIXED)
@@ -92,6 +105,7 @@ exports.getMe = (req, res) => {
         fullname: user.fullname,
         email: user.email,
         online_status: user.online_status,
+        profile_pic: user.profile_pic, // ✅ ADD THIS
       });
     });
   } catch (err) {

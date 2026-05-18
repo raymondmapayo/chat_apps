@@ -6,11 +6,15 @@ const {
   logout,
 } = require("../controllers/auth.controller");
 
+const upload = require("../middleware/upload");
+
 const router = express.Router();
 
-router.post("/register", register);
+// 🔥 ADD MULTER HERE
+router.post("/register", upload.single("profile_pic"), register);
+
 router.post("/login", login);
-// ✅ NEW: fetch logged-in user
 router.get("/me", getMe);
 router.post("/logout", logout);
+
 module.exports = router;

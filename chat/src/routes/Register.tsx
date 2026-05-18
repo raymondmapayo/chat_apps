@@ -1,22 +1,53 @@
 import React from "react";
-import { Form, Input, Button, Checkbox } from "antd";
-import { Mail, Lock, User } from "lucide-react";
+import { Form, Input, Button, Checkbox, Upload } from "antd";
+import { Mail, Lock, User, UploadIcon } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 const RegisterCard = () => {
   const [form] = Form.useForm();
+  const profilePic = Form.useWatch("profile_pic", form) || [];
+  const file = profilePic?.[0]?.originFileObj;
+  const getBase64 = (file: any) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+
+  const handlePreview = async (file: any) => {
+    let src = file.url;
+
+    if (!src && file.originFileObj) {
+      src = await getBase64(file.originFileObj);
+    }
+
+    const imgWindow = window.open(src);
+    if (imgWindow) {
+      imgWindow.document.write(`<img src="${src}" style="width:100%" />`);
+    }
+  };
   const navigate = useNavigate();
   const onFinish = async (values: any) => {
     try {
-      const res = await axios.post("http://localhost:8081/api/auth/register", {
-        fullname: values.fullName,
-        email: values.email,
-        password: values.password,
-      });
+      const file = values.profile_pic?.[0]?.originFileObj;
+
+      const formData = new FormData();
+
+      formData.append("fullname", values.fullName);
+      formData.append("email", values.email);
+      formData.append("password", values.password);
+
+      if (file) {
+        formData.append("profile_pic", file);
+      }
+
+      const res = await axios.post(
+        "http://localhost:8081/api/auth/register",
+        formData,
+      );
 
       console.log("SUCCESS:", res.data);
-
-      // ✅ redirect to login page
       navigate("/");
     } catch (err: any) {
       console.log("ERROR:", err.response?.data || err.message);
@@ -27,8 +58,9 @@ const RegisterCard = () => {
       <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
         {/* TITLE */}
         <div className="mb-8">
-          <h2 className="text-4xl font-bold text-[#1F262A]">Create Account</h2>
-          <p className="text-gray-500 mt-2">Sign up to get started</p>
+          <h2 className="text-4xl font-bold text-[#1F262A] text-center">
+            Create Account
+          </h2>
         </div>
 
         {/* FORM */}
@@ -40,7 +72,7 @@ const RegisterCard = () => {
           >
             <Input
               size="large"
-              placeholder="Enter your name"
+              placeholder="John Doe"
               prefix={<User size={18} />}
               className="h-12 rounded-xl"
             />
@@ -56,7 +88,7 @@ const RegisterCard = () => {
           >
             <Input
               size="large"
-              placeholder="Enter your email"
+              placeholder="example@gmail.com"
               prefix={<Mail size={18} />}
               className="h-12 rounded-xl"
             />
@@ -101,7 +133,42 @@ const RegisterCard = () => {
               className="h-12 rounded-xl"
             />
           </Form.Item>
-
+          {/* ✅ PROFILE PICTURE UPLOAD (ADDED HERE) */}
+          <Form.Item
+            name="profile_pic"
+            valuePropName="fileList"
+            getValueFromEvent={(e) => {
+              if (Array.isArray(e)) return e;
+              return e?.fileList;
+            }}
+          >
+            <Upload
+              listType="picture-card"
+              maxCount={1}
+              beforeUpload={() => false}
+              accept="image/*"
+              fileList={profilePic}
+              onChange={(info) => {
+                form.setFieldValue("profile_pic", info.fileList);
+              }}
+              onPreview={handlePreview}
+              style={{ width: "100%" }}
+              className="w-full"
+            >
+              {/* ONLY SHOW WHEN EMPTY */}
+              {profilePic.length < 1 && (
+                <div
+                  className="w-full h-40 flex items-center justify-center rounded-xl border border-dashed cursor-pointer overflow-hidden"
+                  style={{ width: "100%" }}
+                >
+                  <div className="flex flex-col items-center text-gray-500">
+                    <UploadIcon size={18} />
+                    <span className="text-xs mt-1">Upload Image</span>
+                  </div>
+                </div>
+              )}
+            </Upload>
+          </Form.Item>
           {/* TERMS */}
           <Form.Item
             name="terms"

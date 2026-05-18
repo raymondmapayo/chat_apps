@@ -23,10 +23,6 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, setIsOpen }) => {
     { id: 4, name: "Archive", icon: <Archive size={25} /> },
   ];
 
-  const image = {
-    image: "https://i.pravatar.cc/150?img=3",
-  };
-
   const [user, setUser] = useState<any>({});
 
   useEffect(() => {
@@ -130,7 +126,11 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, setIsOpen }) => {
         {/* USER */}
         <div className={`flex items-center gap-3 ${isOpen ? "" : "flex-col"}`}>
           <img
-            src={image.image}
+            src={
+              user.profile_pic
+                ? `http://localhost:8081/uploads/images/${user.profile_pic}`
+                : "https://i.pravatar.cc/150"
+            }
             alt="user"
             className="w-10 h-10 rounded-full object-cover"
           />

@@ -12,9 +12,13 @@ import {
 
 interface UserFilesProps {
   isOpen: boolean;
+  chat: any;
 }
 
-const UserFiles: React.FC<UserFilesProps> = ({ isOpen }) => {
+const UserFiles: React.FC<UserFilesProps> = ({ isOpen, chat }) => {
+  // ❌ HIDE ENTIRE PANEL IF NO CHAT SELECTED
+  if (!chat) return null;
+
   return (
     <div
       className={`
@@ -25,15 +29,22 @@ const UserFiles: React.FC<UserFilesProps> = ({ isOpen }) => {
         h-full
         transition-all duration-300
         overflow-hidden
-      ${isOpen ? "w-[30px] lg:w-[250px]" : "w-[250px] lg:w-[300px]"}
+        ${isOpen ? "w-[30px] lg:w-[250px]" : "w-[250px] lg:w-[300px]"}
       `}
     >
       {/* TOP SECTION */}
-      <div className="hidden xl:flex  flex-col items-center text-center gap-3 pt-8 px-5">
-        <Avatar size={85} src="https://i.pravatar.cc/150?img=1" />
+      <div className="hidden xl:flex flex-col items-center text-center gap-3 pt-8 px-5">
+        <Avatar
+          size={85}
+          src={
+            chat?.profile_pic
+              ? `http://localhost:8081/uploads/images/${chat.profile_pic}`
+              : "https://i.pravatar.cc/150"
+          }
+        />
 
         <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
-          John Doe
+          {chat?.fullname}
         </h2>
 
         <div className="flex items-center justify-center gap-10 mt-2">

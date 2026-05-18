@@ -88,7 +88,7 @@ const ChatCard: React.FC<ChatCardProps> = ({
       <div className="p-4 border-b border-gray-200 dark:border-gray-800">
         <Input
           size="large"
-          placeholder="Search conversations..."
+          placeholder="Search Messenger..."
           prefix={<SearchOutlined />}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -108,7 +108,11 @@ const ChatCard: React.FC<ChatCardProps> = ({
             <div className="relative">
               <Avatar
                 size={60}
-                src={chat.avatar || "https://i.pravatar.cc/150"}
+                src={
+                  chat.profile_pic
+                    ? `http://localhost:8081/uploads/images/${chat.profile_pic}`
+                    : "https://i.pravatar.cc/150"
+                }
               />
 
               {/* ONLINE STATUS */}
@@ -132,12 +136,19 @@ const ChatCard: React.FC<ChatCardProps> = ({
               </div>
 
               <p className="text-sm text-gray-500 whitespace-nowrap overflow-hidden">
-                {limitMessage(chat.message || "", isOpen ? 21 : 33)}
+                {chat.last_message
+                  ? limitMessage(chat.last_message, isOpen ? 21 : 33)
+                  : "No messages yet"}
               </p>
             </div>
 
             {/* UNREAD */}
-            {chat.unread > 0 && <Badge count={chat.unread} />}
+            {Number(chat.unread) > 0 && (
+              <Badge
+                count={chat.unread}
+                style={{ backgroundColor: "#ff4d4f" }}
+              />
+            )}
           </div>
         ))}
       </div>
